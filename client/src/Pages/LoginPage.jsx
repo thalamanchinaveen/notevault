@@ -30,7 +30,6 @@ const LoginPage = () => {
     try{
       dispatch(logInStart())
       const res = await axios.post(`${process.env.REACT_APP_HOST_URL}/api/auth/login`,values)
-      console.log(res);
       dispatch(logInSuccess(res.data))
       navigate("/")
     }catch(err){

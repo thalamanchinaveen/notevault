@@ -41,6 +41,7 @@ const loginController = async (req, res, next) => {
       path: "/",
       httpOnly: true,
       expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      sameSite : none
     });
     const { password:pass, ...rest } = validUser._doc;
     return res.status(200).json(rest);

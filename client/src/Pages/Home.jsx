@@ -38,7 +38,7 @@ const Home = () => {
       ) : (
         <div className="flex gap-4">
           <Link to="/login">
-            <button className="bg-green-40 text-white px-4 py-2 rounded-full focus:outline-none hover:bg-green-600 mt-2">
+            <button className=" bg-green-400 text-white px-4 py-2 rounded-full focus:outline-none hover:bg-green-600 mt-2">
               Login
             </button>
           </Link>

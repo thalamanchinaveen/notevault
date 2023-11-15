@@ -43,7 +43,7 @@ const CreateNotes = () => {
       setError(false);
       formik.setValues({ ...values, userId: currentUser._id });
       const res = await axios.post(
-        `http://localhost:8000/api/notes/createnotes/${currentUser._id}`,
+        `${process.env.REACT_APP_HOST_URL}/api/notes/createnotes/${currentUser._id}`,
         values,
         { withCredentials: true }
       );

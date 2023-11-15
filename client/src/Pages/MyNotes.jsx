@@ -11,14 +11,14 @@ const MyNotes = () => {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:8000/api/notes/getallnotes/${currentUser._id}`)
+      .get(`${process.env.REACT_APP_HOST_URL}/api/notes/getallnotes/${currentUser._id}`)
       .then((res) => setData(res.data.notes))
       .catch((err) => setError(err.response.data.message));
   }, []);
 
   const deleteHandler = (id, title) => {
     axios
-      .delete(`http://localhost:8000/api/notes/delete/${id}`)
+      .delete(`${process.env.REACT_APP_HOST_URL}/api/notes/delete/${id}`)
       .then((res) => {
         setDeleteMessage(title + " " + res.data);
         setData((prevData) => prevData.filter((note) => note._id !== id));

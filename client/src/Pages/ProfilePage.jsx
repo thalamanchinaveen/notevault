@@ -45,7 +45,7 @@ const ProfilePage = () => {
     try {
       dispatch(getUserDetailsStart());
       const res = await axios.get(
-        `http://localhost:8000/api/user/get/${currentUser._id}`,
+        `${process.env.REACT_APP_HOST_URL}/api/user/get/${currentUser._id}`,
         { withCredentials: true }
       );
       setUserData(res?.data);
@@ -118,7 +118,7 @@ const ProfilePage = () => {
     try {
       updateUserDetailsStart();
       const res = await axios.post(
-        `http://localhost:8000/api/user/update/${currentUser._id}`,
+        `${process.env.REACT_APP_HOST_URL}/api/user/update/${currentUser._id}`,
         values,
         { withCredentials: true }
       );
@@ -141,7 +141,7 @@ const ProfilePage = () => {
     try {
       dispatch(deleteUserDetailsStart());
       await axios.delete(
-        `http://localhost:8000/api/user/delete/${currentUser._id}`
+        `${process.env.REACT_APP_HOST_URL}/api/user/delete/${currentUser._id}`
       );
       dispatch(deleteUserDetailsSuccess());
       persistor.purge();

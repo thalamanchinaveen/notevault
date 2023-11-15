@@ -29,7 +29,7 @@ const LoginPage = () => {
   const onSubmit = async (values) => {
     try{
       dispatch(logInStart())
-      const res = await axios.post("http://localhost:8000/api/auth/login",values)
+      const res = await axios.post(`${process.env.REACT_APP_HOST_URL}/api/auth/login`,values)
       dispatch(logInSuccess(res.data))
       navigate("/")
     }catch(err){

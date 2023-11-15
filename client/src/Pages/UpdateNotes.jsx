@@ -44,7 +44,7 @@ const UpdateNotes = () => {
       setLoading(true);
       setError(false);
       const res = await axios.post(
-        `http://localhost:8000/api/notes/updatenote/${id}`,
+        `${process.env.REACT_APP_HOST_URL}/api/notes/updatenote/${id}`,
         values,
         { withCredentials: true }
       );
@@ -126,7 +126,7 @@ const UpdateNotes = () => {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:8000/api/notes/getnote/${id}`)
+      .get(`${process.env.REACT_APP_HOST_URL}/api/notes/getnote/${id}`)
       .then((res) => setData(res.data.note))
       .catch((err) => console.log(err));
   }, []);

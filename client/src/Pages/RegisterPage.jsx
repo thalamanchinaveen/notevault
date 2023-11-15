@@ -29,7 +29,7 @@ const RegisterPage = () => {
     try {
       setLoading(true);
       const res = await axios.post(
-        "http://localhost:8000/api/auth/register",
+        `${process.env.REACT_APP_HOST_URL}/api/auth/register`,
         values
       );
       if (res.status !== 201) {

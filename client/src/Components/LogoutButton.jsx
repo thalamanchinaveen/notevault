@@ -13,7 +13,7 @@ const LogoutButton = ({ className }) => {
   const logoutHandler = async () => {
     try {
       dispatch(deleteUserDetailsStart());
-      await axios.get("http://localhost:8000/api/auth/logout");
+      await axios.get(`${process.env.REACT_APP_HOST_URL}/api/auth/logout`);
       dispatch(deleteUserDetailsSuccess());
       <Navigate to="/login"/>
       persistor.purge();

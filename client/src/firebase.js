@@ -5,7 +5,7 @@ import { initializeApp } from "firebase/app";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDj0d3t-KX7CnxZpZEiIxk7jWDxkTguG2k",
+  apiKey: `${process.env.REACT_APP_FIREBASE_API}`,
   authDomain: "notevault-5a01f.firebaseapp.com",
   projectId: "notevault-5a01f",
   storageBucket: "notevault-5a01f.appspot.com",

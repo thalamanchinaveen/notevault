@@ -5,11 +5,25 @@ import { Link, useNavigate } from "react-router-dom";
 import OAuth from "../Components/OAuth";
 import SpinnerButton from "../Components/SpinnerButton";
 import Message from "../Components/Message";
+import InputField from "../Components/InputField";
 import api from "../Components/api";
 
 const RegisterPage = () => {
+
+  const inputFields = [
+    { type: "text", id: "username", name: "username", placeholder: "Username" },
+    { type: "email", id: "email", name: "email", placeholder: "Email" },
+    {
+      type: "password",
+      id: "password",
+      name: "password",
+      placeholder: "Password",
+    },
+  ];
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
   const navigate = useNavigate();
 
   const initialValues = {
@@ -21,13 +35,15 @@ const RegisterPage = () => {
   const validationSchema = Yup.object({
     username: Yup.string().required("Required"),
     email: Yup.string().email("Invalid email address").required("Required"),
-    password: Yup.string().min(6, "Must be at least 6 characters").required("Required"),
+    password: Yup.string()
+      .min(6, "Must be at least 6 characters")
+      .required("Required"),
   });
 
   const onSubmit = async (values) => {
     try {
       setLoading(true);
-      const res = await api.post("/api/auth/register", values);
+      const res = await api.post(`/api/auth/register`, values);
       if (res.status !== 201) {
         setLoading(false);
         setError(res.data.message);
@@ -40,26 +56,6 @@ const RegisterPage = () => {
       setError(err.response.data.message);
     }
   };
-
-  const renderInput = (name, type, placeholder) => (
-    <div className="mb-4">
-      <input
-        type={type}
-        id={name}
-        name={name}
-        onChange={formik.handleChange}
-        onBlur={formik.handleBlur}
-        value={formik.values[name]}
-        className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-          formik.touched[name] && formik.errors[name] ? "border-red-500" : "border-teal-500"
-        }`}
-        placeholder={placeholder}
-      />
-      {formik.touched[name] && formik.errors[name] && (
-        <div className="text-red-500 text-sm">{formik.errors[name]}</div>
-      )}
-    </div>
-  );
 
   const formik = useFormik({
     initialValues,
@@ -74,14 +70,28 @@ const RegisterPage = () => {
           Register
         </h2>
         <form onSubmit={formik.handleSubmit}>
-          {renderInput("username", "text", "Username")}
-          {renderInput("email", "email", "Email")}
-          {renderInput("password", "password", "Password")}
+          {inputFields.map((field) => (
+            <InputField
+              key={field.id}
+              type={field.type}
+              id={field.id}
+              name={field.name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              value={formik.values[field.name]}
+              touched={formik.touched[field.name]}
+              errors={formik.errors[field.name]}
+              placeholder={field.placeholder}
+            />
+          ))}
+
           <SpinnerButton
             bool={loading}
-            className="bg-teal-400 text-white px-4 py-2 rounded-full w-full focus:outline-none hover:bg-teal-600 mt-2 disabled:opacity-80"
-            initialValue="Register"
-            nextValue="Registering..."
+            className={
+              "bg-teal-400 text-white px-4 py-2 rounded-full w-full focus:outline-none hover:bg-teal-600 mt-2 disabled:opacity-80"
+            }
+            initialValue={"Register"}
+            nextValue={"Registering..."}
           />
           <div className="text-center mt-2">
             <p className="text-black">or</p>
@@ -90,8 +100,8 @@ const RegisterPage = () => {
         </form>
         <div className="flex gap-2 mt-5">
           <p>Have an account?</p>
-          <Link to="/login">
-            <span className="text-blue-700">Login</span>
+          <Link to={"/login"}>
+            <span className=" text-white px-4 py-2 rounded-full focus:outline-none mt-2 bg-green-400 hover:bg-green-600">Login</span>
           </Link>
         </div>
         {error && <Message message={error} />}

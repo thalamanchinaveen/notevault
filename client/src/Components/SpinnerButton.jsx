@@ -1,12 +1,14 @@
 import React from "react";
 
 const SpinnerButton = ({
-  bool = "",
-  className = "",
-  initialValue = "",
-  nextValue = "",
+  bool,
+  className,
+  initialValue,
+  nextValue,
   ...rest
 }) => {
+  const svgClass = "mr-2 animate-spin";
+
   return (
     <button disabled={bool} className={className} {...rest}>
       {bool ? (
@@ -15,7 +17,7 @@ const SpinnerButton = ({
             width="20"
             height="20"
             fill="currentColor"
-            class="mr-2 animate-spin"
+            className={svgClass}
             viewBox="0 0 1792 1792"
             xmlns="http://www.w3.org/2000/svg"
           >

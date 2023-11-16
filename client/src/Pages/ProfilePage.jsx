@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useFormik } from "formik";
@@ -28,11 +27,22 @@ import SpinnerButton from "../Components/SpinnerButton";
 import Popup from "../Components/Popup";
 import Message from "../Components/Message";
 import api from "../Components/api";
-
-axios.defaults.withCredentials = true;
+import InputField from "../Components/InputField";
 
 const ProfilePage = () => {
+  const inputFields = [
+    { type: "text", id: "username", name: "username", placeholder: "Username" },
+    { type: "email", id: "email", name: "email", placeholder: "Email" },
+    {
+      type: "password",
+      id: "password",
+      name: "password",
+      placeholder: "Password",
+    },
+  ];
+
   const inputRef = useRef();
+  const { currentUser, error } = useSelector((state) => state.userSlice);
 
   const [file, setFile] = useState(undefined);
   const [filePerc, setFilePerc] = useState(0);
@@ -62,14 +72,11 @@ const ProfilePage = () => {
   };
 
   const dispatch = useDispatch();
-  const { currentUser, error } = useSelector((state) => state.userSlice);
 
   const getUserDetails = async () => {
     try {
       dispatch(getUserDetailsStart());
-      const res = await api.get(`/api/user/get/${currentUser._id}`, {
-        withCredentials: true,
-      });
+      const res = await api.get(`/api/user/get/${currentUser._id}`);
       setUserData(res?.data);
       dispatch(getUserDetailsSuccess());
       setProfileLoading(false);
@@ -142,11 +149,7 @@ const ProfilePage = () => {
     setProfileUpdating(true);
     try {
       updateUserDetailsStart();
-      const res = await api.post(
-        `/api/user/update/${currentUser._id}`,
-        values,
-        { withCredentials: true }
-      );
+      const res = await api.post(`/api/user/update/${currentUser._id}`, values);
       setUserData(res.data);
       dispatch(updateUserDetailsSuccess(res.data));
       setUpdateSuccess(true);
@@ -224,71 +227,23 @@ const ProfilePage = () => {
                         ""
                       )}
                     </p>
-                    <input
-                      type="text"
-                      id="username"
-                      name="username"
-                      autoComplete="username"
+                  </div>
+
+                  {inputFields.map((field) => (
+                    <InputField
+                      key={field.id}
+                      type={field.type}
+                      id={field.id}
+                      name={field.name}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      value={formik.values.username}
-                      className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-                        formik.touched.username && formik.errors.username
-                          ? "border-red-500"
-                          : "border-teal-500"
-                      }`}
-                      placeholder="Username"
+                      value={formik.values[field.name]}
+                      touched={formik.touched[field.name]}
+                      errors={formik.errors[field.name]}
+                      placeholder={field.placeholder}
                     />
-                    {formik.touched.username && formik.errors.username && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors.username}
-                      </div>
-                    )}
-                  </div>
-                  <div className="mb-4">
-                    <input
-                      type="email"
-                      id="email"
-                      name="email"
-                      autoComplete="email"
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      value={formik.values.email}
-                      className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-                        formik.touched.email && formik.errors.email
-                          ? "border-red-500"
-                          : "border-teal-500"
-                      }`}
-                      placeholder="Email"
-                    />
-                    {formik.touched.email && formik.errors.email && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors.email}
-                      </div>
-                    )}
-                  </div>
-                  <div className="mb-4">
-                    <input
-                      type="password"
-                      id="password"
-                      name="password"
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      value={formik.values.password}
-                      autoComplete="current-password"
-                      className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-                        formik.touched.password && formik.errors.password
-                          ? "border-red-500"
-                          : "border-teal-500"
-                      }`}
-                      placeholder="Password"
-                    />
-                    {formik.touched.password && formik.errors.password && (
-                      <div className="text-red-500 text-sm">
-                        {formik.errors.password}
-                      </div>
-                    )}
-                  </div>
+                  ))}
+
                   <SpinnerButton
                     bool={profileUpdating}
                     className={

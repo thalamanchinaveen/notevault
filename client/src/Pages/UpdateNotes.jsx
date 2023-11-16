@@ -11,12 +11,10 @@ import {
 } from "firebase/storage";
 import { MdDelete } from "react-icons/md";
 import { useSelector } from "react-redux";
-import axios from "axios";
 import SpinnerButton from "../Components/SpinnerButton";
 import Message from "../Components/Message";
 import api from "../Components/api";
-
-axios.defaults.withCredentials = true;
+import InputField from "../Components/InputField";
 
 const UpdateNotes = () => {
   const { currentUser } = useSelector((state) => state.userSlice);
@@ -46,9 +44,7 @@ const UpdateNotes = () => {
     try {
       setLoading(true);
       setError(false);
-      const res = await api.post(`/api/notes/updatenote/${id}`, values, {
-        withCredentials: true,
-      });
+      const res = await api.post(`/api/notes/updatenote/${id}`, values);
       setLoading(false);
       setError(false);
       setCreateMessage(res.data.message);
@@ -159,24 +155,17 @@ const UpdateNotes = () => {
               </label>
             </div>
             <div className="w-3/4">
-              <input
+              <InputField
                 type="text"
                 id="title"
                 name="title"
                 onChange={formik.handleChange}
                 onBlur={formik.handleBlur}
                 value={formik.values.title}
-                className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-                  formik.touched.title && formik.errors.title
-                    ? "border-red-500"
-                    : "border-teal-500"
-                }`}
+                touched={formik.touched.title}
+                errors={formik.errors.title}
+                placeholder=""
               />
-              {formik.touched.title && formik.errors.title && (
-                <div className="text-red-500 text-sm">
-                  {formik.errors.title}
-                </div>
-              )}
             </div>
           </div>
 

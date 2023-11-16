@@ -12,8 +12,20 @@ import OAuth from "../Components/OAuth";
 import SpinnerButton from "../Components/SpinnerButton";
 import Message from "../Components/Message";
 import api from "../Components/api";
+import InputField from "../Components/InputField";
 
 const LoginPage = () => {
+
+  const inputFields = [
+    { type: "email", id: "email", name: "email", placeholder: "Email" },
+    {
+      type: "password",
+      id: "password",
+      name: "password",
+      placeholder: "Password",
+    },
+  ];
+
   const { currentUser, error } = useSelector((state) => state.userSlice);
 
   const dispatch = useDispatch();
@@ -66,46 +78,20 @@ const LoginPage = () => {
         </h2>
 
         <form onSubmit={formik.handleSubmit}>
-          <div className="mb-4">
-            <input
-              type="email"
-              id="email"
-              name="email"
+        {inputFields.map((field) => (
+            <InputField
+              key={field.id}
+              type={field.type}
+              id={field.id}
+              name={field.name}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              value={formik.values.email}
-              className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-                formik.touched.email && formik.errors.email
-                  ? "border-red-500"
-                  : "border-teal-500"
-              }`}
-              placeholder="Email"
+              value={formik.values[field.name]}
+              touched={formik.touched[field.name]}
+              errors={formik.errors[field.name]}
+              placeholder={field.placeholder}
             />
-            {formik.touched.email && formik.errors.email && (
-              <div className="text-red-500 text-sm">{formik.errors.email}</div>
-            )}
-          </div>
-          <div className="mb-4">
-            <input
-              type="password"
-              id="password"
-              name="password"
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              value={formik.values.password}
-              className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-                formik.touched.password && formik.errors.password
-                  ? "border-red-500"
-                  : "border-teal-500"
-              }`}
-              placeholder="Password"
-            />
-            {formik.touched.password && formik.errors.password && (
-              <div className="text-red-500 text-sm">
-                {formik.errors.password}
-              </div>
-            )}
-          </div>
+          ))}
           <SpinnerButton
             bool={isLoggingIn}
             className={
@@ -122,7 +108,7 @@ const LoginPage = () => {
         <div className="flex gap-2 mt-5">
           <p>Dont have an account?</p>
           <Link to={"/register"}>
-            <span className="text-blue-700">Sign up</span>
+            <span className=" text-white px-4 py-2 rounded-full focus:outline-none mt-2 bg-red-400 hover:bg-red-600">Sign up</span>
           </Link>
         </div>
         {error && <Message message={error} />}

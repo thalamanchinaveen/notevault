@@ -11,6 +11,9 @@ import {
 import { MdDelete } from "react-icons/md";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import SpinnerButton from "../Components/SpinnerButton";
+import Message from "../Components/Message";
+import api from "../Components/api";
 
 axios.defaults.withCredentials = true;
 
@@ -42,8 +45,7 @@ const CreateNotes = () => {
       setLoading(true);
       setError(false);
       formik.setValues({ ...values, userId: currentUser._id });
-      const res = await axios.post(
-        `${process.env.REACT_APP_HOST_URL}/api/notes/createnotes/${currentUser._id}`,
+      const res = await api.post(`/api/notes/createnotes/${currentUser._id}`,
         values,
         { withCredentials: true }
       );
@@ -61,6 +63,7 @@ const CreateNotes = () => {
     validationSchema: validationSchema,
     onSubmit: onSubmit,
   });
+
   const handleImageSubmit = () => {
     if ((files && files.length) + formik.values.image.length < 6) {
       setUploading(true);
@@ -71,7 +74,6 @@ const CreateNotes = () => {
         progressArray.push({ file: files[i], progress: 0 });
         promises.push(storeImage(files[i], i, progressArray));
       }
-
       Promise.all(promises)
         .then((urls) => {
           formik.setFieldValue("image", formik.values.image.concat(urls));
@@ -128,7 +130,6 @@ const CreateNotes = () => {
         <h1 className="text-2xl font-bold mb-4 text-teal-500 uppercase text-center">
           Create Notes
         </h1>
-
         <form onSubmit={formik.handleSubmit}>
           <div className="flex mb-4">
             <div className="w-1/4 pr-4">
@@ -214,14 +215,15 @@ const CreateNotes = () => {
             </div>
           </div>
           <div className="flex justify-end">
-            <button
-              type="button"
-              disabled={uploading}
+            <SpinnerButton
+              bool={uploading}
               onClick={handleImageSubmit}
-              className="p-1 text-green-700 border border-green-700 rounded uppercase hover:shadow-lg disabled:opacity-80"
-            >
-              {uploading ? "Uploading..." : "Upload Images"}
-            </button>
+              className={
+                "p-1 text-green-700 border border-green-700 rounded uppercase hover:shadow-lg disabled:opacity-80"
+              }
+              initialValue={"Upload Images"}
+              nextValue={"  Uploading Images..."}
+            />
           </div>
           {uploadProgress.map((progress, index) => (
             <div key={index} className="flex items-center mb-2">
@@ -232,10 +234,7 @@ const CreateNotes = () => {
               )}%`}</span>
             </div>
           ))}
-          <p className="text-red-700 text-sm">
-            {imageUploadError && imageUploadError}
-          </p>
-
+          {imageUploadError && <Message message={imageUploadError} />}
           <div className="flex mt-3 flex-wrap gap-5 justify-between">
             {formik.values.image.length > 0 &&
               formik.values.image.map((url, index) => (
@@ -259,17 +258,21 @@ const CreateNotes = () => {
               ))}
           </div>
           <div className="mt-4">
-            <button
+            <SpinnerButton
+              bool={loading}
               disabled={loading || uploading}
-              type="submit"
-              className="p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80 w-full"
-            >
-              {loading ? "Creating..." : "Create Notes"}
-            </button>
+              className={
+                "p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80 w-full"
+              }
+              initialValue={"Create Notes"}
+              nextValue={"Creating Notes..."}
+            />
             {error ? (
-              <p className="text-red-700 text-sm mt-3">{error}</p>
+              <Message message={error} />
             ) : createMessage ? (
-              <p className="text-green-700 text-sm mt-3">{createMessage}</p>
+              <p className="text-green-700 font-bold bg-gray-100 border  border-green-500 rounded-full mb-5 text-center mt-3">
+                {createMessage}
+              </p>
             ) : (
               ""
             )}
@@ -281,5 +284,3 @@ const CreateNotes = () => {
 };
 
 export default CreateNotes;
-
-

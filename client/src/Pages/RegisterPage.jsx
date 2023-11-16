@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import * as Yup from "yup";
-import axios from "axios";
 import { useFormik } from "formik";
 import { Link, useNavigate } from "react-router-dom";
 import OAuth from "../Components/OAuth";
+import SpinnerButton from "../Components/SpinnerButton";
+import Message from "../Components/Message";
+import api from "../Components/api";
 
 const RegisterPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-
   const navigate = useNavigate();
 
   const initialValues = {
@@ -20,18 +21,13 @@ const RegisterPage = () => {
   const validationSchema = Yup.object({
     username: Yup.string().required("Required"),
     email: Yup.string().email("Invalid email address").required("Required"),
-    password: Yup.string()
-      .min(6, "Must be at least 6 characters")
-      .required("Required"),
+    password: Yup.string().min(6, "Must be at least 6 characters").required("Required"),
   });
 
   const onSubmit = async (values) => {
     try {
       setLoading(true);
-      const res = await axios.post(
-        `${process.env.REACT_APP_HOST_URL}/api/auth/register`,
-        values
-      );
+      const res = await api.post("/api/auth/register", values);
       if (res.status !== 201) {
         setLoading(false);
         setError(res.data.message);
@@ -44,6 +40,26 @@ const RegisterPage = () => {
       setError(err.response.data.message);
     }
   };
+
+  const renderInput = (name, type, placeholder) => (
+    <div className="mb-4">
+      <input
+        type={type}
+        id={name}
+        name={name}
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        value={formik.values[name]}
+        className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
+          formik.touched[name] && formik.errors[name] ? "border-red-500" : "border-teal-500"
+        }`}
+        placeholder={placeholder}
+      />
+      {formik.touched[name] && formik.errors[name] && (
+        <div className="text-red-500 text-sm">{formik.errors[name]}</div>
+      )}
+    </div>
+  );
 
   const formik = useFormik({
     initialValues,
@@ -58,86 +74,27 @@ const RegisterPage = () => {
           Register
         </h2>
         <form onSubmit={formik.handleSubmit}>
-          <div className="mb-4">
-            <input
-              type="text"
-              id="username"
-              name="username"
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              value={formik.values.username}
-              className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-                formik.touched.username && formik.errors.username
-                  ? "border-red-500"
-                  : "border-teal-500"
-              }`}
-              placeholder="Username"
-            />
-            {formik.touched.username && formik.errors.username && (
-              <div className="text-red-500 text-sm">
-                {formik.errors.username}
-              </div>
-            )}
-          </div>
-          <div className="mb-4">
-            <input
-              type="email"
-              id="email"
-              name="email"
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              value={formik.values.email}
-              className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-                formik.touched.email && formik.errors.email
-                  ? "border-red-500"
-                  : "border-teal-500"
-              }`}
-              placeholder="Email"
-            />
-            {formik.touched.email && formik.errors.email && (
-              <div className="text-red-500 text-sm">{formik.errors.email}</div>
-            )}
-          </div>
-          <div className="mb-4">
-            <input
-              type="password"
-              id="password"
-              name="password"
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              value={formik.values.password}
-              className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-                formik.touched.password && formik.errors.password
-                  ? "border-red-500"
-                  : "border-teal-500"
-              }`}
-              placeholder="Password"
-            />
-            {formik.touched.password && formik.errors.password && (
-              <div className="text-red-500 text-sm">
-                {formik.errors.password}
-              </div>
-            )}
-          </div>
-          <button
-            disabled={loading}
-            type="submit"
-            className="bg-teal-400 text-white px-4 py-2 rounded-full w-full focus:outline-none hover:bg-teal-600 mt-2 disbled:opacity-80"
-          >
-            {loading ? "Loading..." : "Register"}
-          </button>
+          {renderInput("username", "text", "Username")}
+          {renderInput("email", "email", "Email")}
+          {renderInput("password", "password", "Password")}
+          <SpinnerButton
+            bool={loading}
+            className="bg-teal-400 text-white px-4 py-2 rounded-full w-full focus:outline-none hover:bg-teal-600 mt-2 disabled:opacity-80"
+            initialValue="Register"
+            nextValue="Registering..."
+          />
           <div className="text-center mt-2">
             <p className="text-black">or</p>
-            <OAuth/>
+            <OAuth />
           </div>
         </form>
         <div className="flex gap-2 mt-5">
           <p>Have an account?</p>
-          <Link to={"/login"}>
+          <Link to="/login">
             <span className="text-blue-700">Login</span>
           </Link>
         </div>
-        {error && <p className="text-red-500 mt-5">{error}</p>}
+        {error && <Message message={error} />}
       </div>
     </div>
   );

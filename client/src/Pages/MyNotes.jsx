@@ -1,40 +1,63 @@
-import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Link, Navigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import SpinnerButton from "../Components/SpinnerButton";
+import Popup from "../Components/Popup";
+import Message from "../Components/Message";
+import api from "../Components/api";
 
 const MyNotes = () => {
   const [data, setData] = useState([]);
   const [error, setError] = useState(false);
   const [deleteMessage, setDeleteMessage] = useState("");
+  const [renderNotes, setRenderNotes] = useState(true);
+  const [deleteState, setDeleteState] = useState(
+    Array(data.length).fill(false)
+  );
   const { currentUser } = useSelector((state) => state.userSlice);
 
   useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_HOST_URL}/api/notes/getallnotes/${currentUser._id}`)
-      .then((res) => setData(res.data.notes))
-      .catch((err) => setError(err.response.data.message));
+    api
+      .get(`/api/notes/getallnotes/${currentUser._id}`)
+      .then((res) => {
+        setData(res.data.notes);
+        setRenderNotes(false);
+      })
+      .catch((err) => {
+        setError(err.response.data.message);
+        setRenderNotes(false);
+      });
   }, []);
 
-  const deleteHandler = (id, title) => {
-    axios
-      .delete(`${process.env.REACT_APP_HOST_URL}/api/notes/delete/${id}`)
+  const deleteHandler = (id, title, index) => {
+    const newDeleteStates = [...deleteState];
+    newDeleteStates[index] = true;
+
+    setDeleteState(newDeleteStates);
+    api
+      .delete(`/api/notes/delete/${id}`)
       .then((res) => {
         setDeleteMessage(title + " " + res.data);
         setData((prevData) => prevData.filter((note) => note._id !== id));
+        newDeleteStates[index] = false;
+        setDeleteState(newDeleteStates);
       })
-      .catch((err) => setError(err.response.data.message));
+      .catch((err) => {
+        setError(err.response.data.message);
+        newDeleteStates[index] = false;
+        setDeleteState(newDeleteStates);
+      });
   };
 
   return (
     <div className="bg-gradient-to-br from-teal-700 to-teal-500 h-screen flex justify-center">
       <div className="bg-white bg-opacity-30 p-8 rounded-lg shadow-md w-1/2 m-5">
         <h1 className="text-4xl font-bold mb-6">My Notes</h1>
-        {error && <p>{error}</p>}
+        {error && <Message message={error} />}
         {data.length > 0 ? (
           <React.Fragment>
-            {deleteMessage && <p>{deleteMessage}</p>}
-            {data.map((note) => (
+            {deleteMessage && <Message message={deleteMessage} />}
+            {data.map((note, index) => (
               <div
                 key={note._id}
                 className="bg-white p-6 rounded-lg shadow-md mb-6 flex justify-between items-center"
@@ -61,18 +84,24 @@ const MyNotes = () => {
                       Edit
                     </button>
                   </Link>
-                  <button
-                    onClick={() => deleteHandler(note._id, note.title)}
-                    className="bg-red-400 text-white px-4 py-2 rounded-full focus:outline-none hover:bg-red-800 mt-2"
-                  >
-                    Delete
-                  </button>
+
+                  <SpinnerButton
+                    onClick={() => deleteHandler(note._id, note.title, index)}
+                    bool={deleteState[index]}
+                    className={
+                      "bg-red-400 text-white px-4 py-2 rounded-full focus:outline-none hover:bg-red-800 disabled:bg-opacity-80 mt-2"
+                    }
+                    initialValue={"Delete"}
+                    nextValue={"Deleting..."}
+                  />
                 </div>
               </div>
             ))}
           </React.Fragment>
+        ) : renderNotes ? (
+          <Popup text={"Your Notes are Loading"} />
         ) : (
-          <p>No notes available.</p>
+          <Message message={" No notes available."} />
         )}
       </div>
     </div>

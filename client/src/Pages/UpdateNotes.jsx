@@ -12,6 +12,9 @@ import {
 import { MdDelete } from "react-icons/md";
 import { useSelector } from "react-redux";
 import axios from "axios";
+import SpinnerButton from "../Components/SpinnerButton";
+import Message from "../Components/Message";
+import api from "../Components/api";
 
 axios.defaults.withCredentials = true;
 
@@ -43,11 +46,9 @@ const UpdateNotes = () => {
     try {
       setLoading(true);
       setError(false);
-      const res = await axios.post(
-        `${process.env.REACT_APP_HOST_URL}/api/notes/updatenote/${id}`,
-        values,
-        { withCredentials: true }
-      );
+      const res = await api.post(`/api/notes/updatenote/${id}`, values, {
+        withCredentials: true,
+      });
       setLoading(false);
       setError(false);
       setCreateMessage(res.data.message);
@@ -125,8 +126,8 @@ const UpdateNotes = () => {
   };
 
   useEffect(() => {
-    axios
-      .get(`${process.env.REACT_APP_HOST_URL}/api/notes/getnote/${id}`)
+    api
+      .get(`/api/notes/getnote/${id}`)
       .then((res) => setData(res.data.note))
       .catch((err) => console.log(err));
   }, []);
@@ -232,14 +233,15 @@ const UpdateNotes = () => {
             </div>
           </div>
           <div className="flex justify-end">
-            <button
-              type="button"
-              disabled={uploading}
+            <SpinnerButton
+              bool={uploading}
               onClick={handleImageSubmit}
-              className="p-1 text-green-700 border border-green-700 rounded uppercase hover:shadow-lg disabled:opacity-80"
-            >
-              {uploading ? "Uploading..." : "Upload Images"}
-            </button>
+              className={
+                "p-1 text-green-700 border border-green-700 rounded uppercase hover:shadow-lg disabled:opacity-80"
+              }
+              initialValue={"Upload Images"}
+              nextValue={"  Uploading Images..."}
+            />
           </div>
           {uploadProgress.map((progress, index) => (
             <div key={index} className="flex items-center mb-2">
@@ -250,10 +252,7 @@ const UpdateNotes = () => {
               )}%`}</span>
             </div>
           ))}
-          <p className="text-red-700 text-sm">
-            {imageUploadError && imageUploadError}
-          </p>
-
+          {imageUploadError && <Message message={imageUploadError} />}
           <div className="flex mt-3 flex-wrap gap-5 justify-between">
             {formik.values.image.length > 0 &&
               formik.values.image.map((url, index) => (
@@ -277,17 +276,21 @@ const UpdateNotes = () => {
               ))}
           </div>
           <div className="mt-4">
-            <button
+            <SpinnerButton
+              bool={loading}
               disabled={loading || uploading}
-              type="submit"
-              className="p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80 w-full"
-            >
-              {loading ? "Updating..." : "Update Notes"}
-            </button>
+              className={
+                "p-3 bg-slate-700 text-white rounded-lg uppercase hover:opacity-95 disabled:opacity-80 w-full"
+              }
+              initialValue={"Update Notes"}
+              nextValue={"Updating Notes..."}
+            />
             {error ? (
-              <p className="text-red-700 text-sm mt-3">{error}</p>
+              <Message message={error} />
             ) : createMessage ? (
-              <p className="text-green-700 text-sm mt-3">{createMessage}</p>
+              <p className="text-green-700 font-bold bg-gray-100 border  border-green-500 rounded-full mb-5 text-center mt-3">
+                {createMessage}
+              </p>
             ) : (
               ""
             )}

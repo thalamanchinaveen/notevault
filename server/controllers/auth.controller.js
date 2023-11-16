@@ -61,8 +61,10 @@ const googleController = async (req, res, next) => {
       });
       res.cookie("access_token", token, {
         path: "/",
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
         httpOnly: true,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        sameSite : "none",
+        secure: true,
       });
       const { password: pass, ...rest } = user._doc;
       return res.status(200).json(rest);
@@ -87,7 +89,8 @@ const googleController = async (req, res, next) => {
         path: "/",
         expires: new Date(Date.now() + 24 * 60 * 60 * 1000),
         httpOnly: true,
-        samesite: "lax",
+        sameSite : "none",
+        secure: true,
       });
       const { password: pass, ...rest } = newUser._doc;
       return res.status(200).json(rest);

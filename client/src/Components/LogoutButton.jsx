@@ -1,28 +1,47 @@
 // LogoutButton.js
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { deleteUserDetailsFail, deleteUserDetailsStart, deleteUserDetailsSuccess } from "../Redux/user/userSlice";
-import axios from "axios";
+import {
+  deleteUserDetailsFail,
+  deleteUserDetailsStart,
+  deleteUserDetailsSuccess,
+} from "../Redux/user/userSlice";
 import { persistor } from "../Redux/store";
 import { Navigate } from "react-router-dom";
+import Popup from "./Popup";
+import api from "./api";
 
 const LogoutButton = ({ className }) => {
   const dispatch = useDispatch();
-  
+  const [logoutLoading, setLogoutLoading] = useState(false);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+
+  useEffect(() => {
+    if (shouldRedirect) {
+      return <Navigate to="/login" />;
+    }
+  }, [shouldRedirect]);
 
   const logoutHandler = async () => {
+    setLogoutLoading(true);
     try {
       dispatch(deleteUserDetailsStart());
-      await axios.get(`${process.env.REACT_APP_HOST_URL}/api/auth/logout`);
+      await api.get(`/api/auth/logout`);
       dispatch(deleteUserDetailsSuccess());
-      <Navigate to="/login"/>
+      setLogoutLoading(false);
+      setShouldRedirect(true);
       persistor.purge();
     } catch (err) {
-      dispatch(deleteUserDetailsFail(err.response.data.message));
+      dispatch(
+        deleteUserDetailsFail(err.response?.data?.message || "Unknown error")
+      );
+      setLogoutLoading(false);
     }
   };
 
-  return (
+  return logoutLoading ? (
+    <Popup text={"Logging Out"} />
+  ) : (
     <button onClick={logoutHandler} className={className}>
       Logout
     </button>

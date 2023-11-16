@@ -24,6 +24,10 @@ import {
 import { persistor } from "../Redux/store";
 import { Link } from "react-router-dom";
 import LogoutButton from "../Components/LogoutButton";
+import SpinnerButton from "../Components/SpinnerButton";
+import Popup from "../Components/Popup";
+import Message from "../Components/Message";
+import api from "../Components/api";
 
 axios.defaults.withCredentials = true;
 
@@ -35,23 +39,43 @@ const ProfilePage = () => {
   const [fileUploadError, setFileUploadError] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
   const [userData, setUserData] = useState({});
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileUpdating, setProfileUpdating] = useState(false);
+  const [yesDeleting, setYesDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const openDeleteModal = () => {
+    setShowDeleteModal(true);
+  };
+
+  const closeDeleteModal = () => {
+    setShowDeleteModal(false);
+  };
+
+  const deleteHandlerWithConfirmation = () => {
+    openDeleteModal();
+  };
+
+  const confirmDeleteHandler = async () => {
+    await deleteHandler();
+    closeDeleteModal();
+  };
 
   const dispatch = useDispatch();
-  const { currentUser, error, loading } = useSelector(
-    (state) => state.userSlice
-  );
+  const { currentUser, error } = useSelector((state) => state.userSlice);
 
   const getUserDetails = async () => {
     try {
       dispatch(getUserDetailsStart());
-      const res = await axios.get(
-        `${process.env.REACT_APP_HOST_URL}/api/user/get/${currentUser._id}`,
-        { withCredentials: true }
-      );
+      const res = await api.get(`/api/user/get/${currentUser._id}`, {
+        withCredentials: true,
+      });
       setUserData(res?.data);
       dispatch(getUserDetailsSuccess());
+      setProfileLoading(false);
     } catch (err) {
       dispatch(getUserDetailsFail(err?.response?.data?.message));
+      setProfileLoading(false);
     }
   };
 
@@ -115,19 +139,22 @@ const ProfilePage = () => {
   });
 
   const onSubmit = async (values) => {
+    setProfileUpdating(true);
     try {
       updateUserDetailsStart();
-      const res = await axios.post(
-        `${process.env.REACT_APP_HOST_URL}/api/user/update/${currentUser._id}`,
+      const res = await api.post(
+        `/api/user/update/${currentUser._id}`,
         values,
         { withCredentials: true }
       );
-      setUserData(res.data)
+      setUserData(res.data);
       dispatch(updateUserDetailsSuccess(res.data));
       setUpdateSuccess(true);
+      setProfileUpdating(false);
     } catch (err) {
       dispatch(updateUserDetailsFail(err.response.data.message));
       setUpdateSuccess(false);
+      setProfileUpdating(false);
     }
   };
 
@@ -138,161 +165,198 @@ const ProfilePage = () => {
   });
 
   const deleteHandler = async () => {
+    setYesDeleting(true);
     try {
       dispatch(deleteUserDetailsStart());
-      await axios.delete(
-        `${process.env.REACT_APP_HOST_URL}/api/user/delete/${currentUser._id}`
-      );
+      await api.delete(`/api/user/delete/${currentUser._id}`);
       dispatch(deleteUserDetailsSuccess());
       persistor.purge();
+      setYesDeleting(false);
     } catch (err) {
       dispatch(deleteUserDetailsFail(err.response.data.message));
+      setYesDeleting(false);
     }
   };
 
   return (
     <div>
-      {userData._id ? (
-        <div className="bg-gradient-to-br from-teal-700 to-teal-500 min-h-screen flex justify-center">
-          <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md mt-14 mb-10 h-fit">
-            <h2 className="text-2xl font-bold mb-4 text-teal-500 uppercase text-center">
-              Profile
-            </h2>
-            <form onSubmit={formik.handleSubmit}>
-              <div className="mb-4 flex flex-col items-center">
-                <input
-                  type="file"
-                  name="image"
-                  id="image"
-                  hidden
-                  ref={inputRef}
-                  accept="image/*"
-                  onChange={(e) => setFile(e.target.files[0])}
-                />
-                {formik.values.avatar && (
-                  <img
-                    src={formik.values.avatar}
-                    alt="Profile"
-                    className="w-20 h-20 rounded-full mb-4"
-                    onClick={() => inputRef.current.click()}
-                  />
-                )}
-                <p className="text-sm self-center">
-                  {fileUploadError ? (
-                    <span className="text-red-700">
-                      Error Image upload (image must be less than 2 mb)
-                    </span>
-                  ) : filePerc > 0 && filePerc < 100 ? (
-                    <span className="text-slate-700">{`Uploading ${filePerc}%`}</span>
-                  ) : filePerc === 100 ? (
-                    <span className="text-green-700">
-                      Image successfully uploaded!
-                    </span>
-                  ) : (
-                    ""
-                  )}
-                </p>
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  autoComplete="username"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.username}
-                  className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-                    formik.touched.username && formik.errors.username
-                      ? "border-red-500"
-                      : "border-teal-500"
-                  }`}
-                  placeholder="Username"
-                />
-                {formik.touched.username && formik.errors.username && (
-                  <div className="text-red-500 text-sm">
-                    {formik.errors.username}
-                  </div>
-                )}
-              </div>
-              <div className="mb-4">
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  autoComplete="email"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.email}
-                  className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-                    formik.touched.email && formik.errors.email
-                      ? "border-red-500"
-                      : "border-teal-500"
-                  }`}
-                  placeholder="Email"
-                />
-                {formik.touched.email && formik.errors.email && (
-                  <div className="text-red-500 text-sm">
-                    {formik.errors.email}
-                  </div>
-                )}
-              </div>
-              <div className="mb-4">
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  value={formik.values.password}
-                  autoComplete="current-password"
-                  className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
-                    formik.touched.password && formik.errors.password
-                      ? "border-red-500"
-                      : "border-teal-500"
-                  }`}
-                  placeholder="Password"
-                />
-                {formik.touched.password && formik.errors.password && (
-                  <div className="text-red-500 text-sm">
-                    {formik.errors.password}
-                  </div>
-                )}
-              </div>
-              <button
-                disabled={loading}
-                type="submit"
-                className="bg-teal-400 text-white px-4 py-2 rounded-full w-full focus:outline-none hover:bg-teal-800 mt-2 disabled:bg-opacity-5"
-              >
-                {loading ? "Loading..." : "Update Profile"}
-              </button>
-            </form>
-            <Link to="/createnotes">
-              <button className="bg-yellow-400 text-black px-4 py-2 rounded-full w-full focus:outline-none hover:bg-yellow-600 mt-2 disbled:opacity-80">
-                Create Notes
-              </button>
-            </Link>
-            <p className="text-red-700 mt-5">{error ? error : ""}</p>
-            <p className="text-green-700 mt-5">
-              {updateSuccess ? "User is updated successfully!" : ""}
-            </p>
-            <div className="flex justify-between mt-2">
-              <button
-                onClick={deleteHandler}
-                type="submit"
-                className="bg-red-400 text-white px-4 py-2 rounded-full focus:outline-none hover:bg-red-800 mt-2"
-              >
-                Delete
-              </button>
-              <LogoutButton
-                className={
-                  "bg-green-400 text-white px-4 py-2 rounded-full focus:outline-none hover:bg-green-600 mt-2"
-                }
-              />
-            </div>
-          </div>
-        </div>
+      {profileLoading ? (
+        <Popup text={"Your Profile is Loading"} />
       ) : (
-        <h1 className="text-4xl text-red-700 text-center">{error}</h1>
-      )}
+        <div>
+          {userData._id ? (
+            <div className="bg-gradient-to-br from-teal-700 to-teal-500 min-h-screen flex justify-center">
+              <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md mt-14 mb-10 h-fit">
+                <h2 className="text-2xl font-bold mb-4 text-teal-500 uppercase text-center">
+                  Profile
+                </h2>
+                <form onSubmit={formik.handleSubmit}>
+                  <div className="mb-4 flex flex-col items-center">
+                    <input
+                      type="file"
+                      name="image"
+                      id="image"
+                      hidden
+                      ref={inputRef}
+                      accept="image/*"
+                      onChange={(e) => setFile(e.target.files[0])}
+                    />
+                    {formik.values.avatar && (
+                      <img
+                        src={formik.values.avatar}
+                        alt="Profile"
+                        className="w-20 h-20 rounded-full mb-4"
+                        onClick={() => inputRef.current.click()}
+                      />
+                    )}
+                    <p className="text-sm self-center">
+                      {fileUploadError ? (
+                        <span className="text-red-700">
+                          Error Image upload (image must be less than 2 mb)
+                        </span>
+                      ) : filePerc > 0 && filePerc < 100 ? (
+                        <span className="text-slate-700">{`Uploading ${filePerc}%`}</span>
+                      ) : filePerc === 100 ? (
+                        <span className="text-green-700">
+                          Image successfully uploaded!
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </p>
+                    <input
+                      type="text"
+                      id="username"
+                      name="username"
+                      autoComplete="username"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.username}
+                      className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
+                        formik.touched.username && formik.errors.username
+                          ? "border-red-500"
+                          : "border-teal-500"
+                      }`}
+                      placeholder="Username"
+                    />
+                    {formik.touched.username && formik.errors.username && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.username}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mb-4">
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      autoComplete="email"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.email}
+                      className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
+                        formik.touched.email && formik.errors.email
+                          ? "border-red-500"
+                          : "border-teal-500"
+                      }`}
+                      placeholder="Email"
+                    />
+                    {formik.touched.email && formik.errors.email && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.email}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mb-4">
+                    <input
+                      type="password"
+                      id="password"
+                      name="password"
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      value={formik.values.password}
+                      autoComplete="current-password"
+                      className={`w-full px-4 py-2 border-b-2 focus:outline-none ${
+                        formik.touched.password && formik.errors.password
+                          ? "border-red-500"
+                          : "border-teal-500"
+                      }`}
+                      placeholder="Password"
+                    />
+                    {formik.touched.password && formik.errors.password && (
+                      <div className="text-red-500 text-sm">
+                        {formik.errors.password}
+                      </div>
+                    )}
+                  </div>
+                  <SpinnerButton
+                    bool={profileUpdating}
+                    className={
+                      "bg-teal-400 text-white px-4 py-2 rounded-full w-full focus:outline-none hover:bg-teal-800 mt-2 disabled:bg-opacity-80"
+                    }
+                    initialValue={"Update Profile"}
+                    nextValue={"Profile is Updating..."}
+                  />
+                </form>
+                <Link to="/createnotes">
+                  <button className="bg-yellow-400 text-black px-4 py-2 rounded-full w-full focus:outline-none hover:bg-yellow-600 mt-2 disbled:opacity-80">
+                    Create Notes
+                  </button>
+                </Link>
+                {error ? <Message message={error} /> : ""}
+                {updateSuccess ? (
+                  <p className="text-green-500 font-bold bg-gray-100 border border-green-500 rounded-full mb-5 text-center mt-3">
+                    Profile is updated successfully!
+                  </p>
+                ) : (
+                  ""
+                )}
+                <div className="flex justify-between mt-2">
+                  <button
+                    onClick={deleteHandlerWithConfirmation}
+                    className="bg-red-400 text-white px-4 py-2 rounded-full focus:outline-none hover:bg-red-800 mt-2"
+                  >
+                    Delete
+                  </button>
+                  <LogoutButton
+                    className={
+                      "bg-green-400 text-white px-4 py-2 rounded-full focus:outline-none hover:bg-green-600 mt-2"
+                    }
+                  />
+                </div>
+                {showDeleteModal && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                    <div className="bg-white p-8 rounded-lg shadow-lg flex flex-col items-center">
+                      <p className="text-2xl font-bold text-gray-800 mb-4">
+                        Are you sure you want to delete your profile?
+                      </p>
+                      <div className="flex gap-4">
+                        <SpinnerButton
+                          onClick={confirmDeleteHandler}
+                          bool={yesDeleting}
+                          className={
+                            "bg-red-400 text-white px-4 py-2 rounded-full focus:outline-none hover:bg-red-800 disabled:bg-opacity-80"
+                          }
+                          initialValue={"yes"}
+                          nextValue={"Deleting..."}
+                        />
+                        <button
+                          onClick={closeDeleteModal}
+                          className="bg-gray-400 text-white px-4 py-2 rounded-full focus:outline-none hover:bg-gray-600"
+                        >
+                          No
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <Message message={error} />
+          )}
+        </div>
+      )}{" "}
     </div>
   );
 };

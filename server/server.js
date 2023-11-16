@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 9000;
 const app = express();
 
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: 'https://notevaults.netlify.app',
   credentials: true,
 }));
 app.use(cookieParser());
